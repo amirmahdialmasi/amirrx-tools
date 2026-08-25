@@ -1,67 +1,44 @@
-# PDF to Images ZIP
+# AmirTools
 
-A simple and lightweight PDF to Images converter built with Python and PyQt6.
+AmirTools is a simple desktop utility application built with Python and PyQt6.
 
-The application converts every page of a PDF file into a PNG image and stores the images directly inside a ZIP archive without creating temporary image files.
+The project provides useful tools for working with PDF and image files, with a focus on keeping the interface simple and easy to use.
 
 ## Features
 
-* Convert PDF pages to PNG images
-* Store images directly in a ZIP file
-* Simple PyQt6 graphical interface
-* PDF file selection
-* ZIP output selection
-* Conversion progress bar
-* No temporary image files
+### PDF
+- Convert PDF pages to PNG images
+- Pack converted images into a ZIP file
+- Progress tracking during conversion
+
+### Image
+- Convert images between different formats
+- Compress images with adjustable quality
+- More image tools will be added later
 
 ## Technologies
 
-* Python
-* PyQt6
-* PyMuPDF
-* zipfile
+- Python
+- PyQt6
+- PyMuPDF
+- Pillow
+- ZIPFile
 
-## Installation
-
-Clone the repository:
-
-```bash
-git clone <repository-url>
-cd <repository-folder>
-```
-
-Install the required dependencies:
-
-```bash
-pip install PyQt6 PyMuPDF
-```
-
-Run the application:
-
-```bash
-python main.py
-```
-
-## How It Works
+## Project Structure
 
 ```text
-PDF
- │
- ▼
-PyMuPDF
- │
- ├── Page 1 ──→ PNG ┐
- ├── Page 2 ──→ PNG │
- ├── Page 3 ──→ PNG ├──→ ZIP
- └── Page N ──→ PNG ┘
+AmirTools/
+├── main.py
+├── pdf.py
+├── image.py
+└── requirements.txt
+```
+## How to use?
+In your folder :
+
+```bash
+git clone "https://github.com/amirmahdialmasi/amirrx-tools"
+git pull
 ```
 
-The generated images are kept in memory and written directly into the ZIP archive.
-
-## Project Status
-
-Version 1.0 — Basic PDF to Images ZIP conversion is implemented.
-
-## License
-
-This project is open-source and available under the MIT License.
+## I hope enjoyable from app
