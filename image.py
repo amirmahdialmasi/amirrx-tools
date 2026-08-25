@@ -12,7 +12,8 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
     QComboBox,
-    QSpinBox
+    QSpinBox,
+    QCheckBox
 )
 
 
@@ -22,7 +23,7 @@ class ImageWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Image Tools")
-        self.resize(600, 450)
+        self.resize(600, 550)
 
         self.create_ui()
         self.connect_signals()
@@ -34,14 +35,23 @@ class ImageWindow(QWidget):
         # -------------------------
 
         self.image_path = QLineEdit()
-        self.image_path.setPlaceholderText("Select image")
+        self.image_path.setPlaceholderText(
+            "Select image"
+        )
 
-        self.browse_button = QPushButton("Browse")
+        self.browse_button = QPushButton(
+            "Browse"
+        )
 
         path_layout = QHBoxLayout()
 
-        path_layout.addWidget(self.image_path)
-        path_layout.addWidget(self.browse_button)
+        path_layout.addWidget(
+            self.image_path
+        )
+
+        path_layout.addWidget(
+            self.browse_button
+        )
 
         # -------------------------
         # Convert
@@ -56,7 +66,9 @@ class ImageWindow(QWidget):
             "BMP"
         ])
 
-        self.convert_button = QPushButton("Convert")
+        self.convert_button = QPushButton(
+            "Convert"
+        )
 
         # -------------------------
         # Compress
@@ -64,16 +76,64 @@ class ImageWindow(QWidget):
 
         self.quality_box = QSpinBox()
 
-        self.quality_box.setRange(1, 100)
-        self.quality_box.setValue(80)
+        self.quality_box.setRange(
+            1,
+            100
+        )
 
-        self.compress_button = QPushButton("Compress")
+        self.quality_box.setValue(
+            80
+        )
+
+        self.compress_button = QPushButton(
+            "Compress"
+        )
+
+        # -------------------------
+        # Resize
+        # -------------------------
+
+        self.width_box = QSpinBox()
+
+        self.width_box.setRange(
+            1,
+            10000
+        )
+
+        self.width_box.setValue(
+            1920
+        )
+
+        self.height_box = QSpinBox()
+
+        self.height_box.setRange(
+            1,
+            10000
+        )
+
+        self.height_box.setValue(
+            1080
+        )
+
+        self.aspect_ratio_checkbox = QCheckBox(
+            "Keep Aspect Ratio"
+        )
+
+        self.aspect_ratio_checkbox.setChecked(
+            True
+        )
+
+        self.resize_button = QPushButton(
+            "Resize Image"
+        )
 
         # -------------------------
         # Status
         # -------------------------
 
-        self.status_label = QLabel("Ready")
+        self.status_label = QLabel(
+            "Ready"
+        )
 
         # -------------------------
         # Layout
@@ -81,7 +141,11 @@ class ImageWindow(QWidget):
 
         layout = QVBoxLayout()
 
-        layout.addLayout(path_layout)
+        layout.addLayout(
+            path_layout
+        )
+
+        # Convert
 
         layout.addWidget(
             QLabel("Convert format:")
@@ -95,6 +159,8 @@ class ImageWindow(QWidget):
             self.convert_button
         )
 
+        # Compress
+
         layout.addWidget(
             QLabel("Compression quality:")
         )
@@ -107,11 +173,41 @@ class ImageWindow(QWidget):
             self.compress_button
         )
 
+        # Resize
+
+        layout.addWidget(
+            QLabel("Resize width:")
+        )
+
+        layout.addWidget(
+            self.width_box
+        )
+
+        layout.addWidget(
+            QLabel("Resize height:")
+        )
+
+        layout.addWidget(
+            self.height_box
+        )
+
+        layout.addWidget(
+            self.aspect_ratio_checkbox
+        )
+
+        layout.addWidget(
+            self.resize_button
+        )
+
+        # Status
+
         layout.addWidget(
             self.status_label
         )
 
-        self.setLayout(layout)
+        self.setLayout(
+            layout
+        )
 
     def connect_signals(self):
 
@@ -127,6 +223,14 @@ class ImageWindow(QWidget):
             self.compress
         )
 
+        self.resize_button.clicked.connect(
+            self.resize_image
+        )
+
+    # -------------------------
+    # Browse
+    # -------------------------
+
     def browse(self):
 
         file_path, _ = QFileDialog.getOpenFileName(
@@ -137,7 +241,10 @@ class ImageWindow(QWidget):
         )
 
         if file_path:
-            self.image_path.setText(file_path)
+
+            self.image_path.setText(
+                file_path
+            )
 
     # -------------------------
     # Convert
@@ -173,10 +280,15 @@ class ImageWindow(QWidget):
 
         try:
 
-            image = Image.open(image_path)
+            image = Image.open(
+                image_path
+            )
 
             if output_format == "jpg":
-                image = image.convert("RGB")
+
+                image = image.convert(
+                    "RGB"
+                )
 
             image.save(
                 output_path,
@@ -221,9 +333,13 @@ class ImageWindow(QWidget):
 
         try:
 
-            image = Image.open(image_path)
+            image = Image.open(
+                image_path
+            )
 
-            image = image.convert("RGB")
+            image = image.convert(
+                "RGB"
+            )
 
             quality = self.quality_box.value()
 
@@ -236,6 +352,67 @@ class ImageWindow(QWidget):
 
             self.status_label.setText(
                 "Image compressed successfully!"
+            )
+
+        except Exception as error:
+
+            self.status_label.setText(
+                f"Error: {error}"
+            )
+
+    # -------------------------
+    # Resize
+    # -------------------------
+
+    def resize_image(self):
+
+        image_path = self.image_path.text()
+
+        if not image_path:
+
+            self.status_label.setText(
+                "Please select an image."
+            )
+
+            return
+
+        width = self.width_box.value()
+        height = self.height_box.value()
+
+        output_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Resized Image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
+        )
+
+        if not output_path:
+            return
+
+        try:
+
+            image = Image.open(
+                image_path
+            )
+
+            if self.aspect_ratio_checkbox.isChecked():
+
+                image.thumbnail(
+                    (width, height)
+                )
+
+            else:
+
+                image = image.resize(
+                    (width, height)
+                )
+
+            image.save(
+                output_path
+            )
+
+            self.status_label.setText(
+                "Image resized successfully!"
             )
 
         except Exception as error:
