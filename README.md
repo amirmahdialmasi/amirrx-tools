@@ -23,6 +23,15 @@ The project provides useful tools for working with PDF and image files, with a f
 - PyMuPDF
 - Pillow
 - ZIPFile
+- joblib
+- sklearn (sickit-learn):
+    - train_test_split
+    - RandomForestRegressor
+    - metrics
+- Pandas
+- numpy
+- math
+- os
 
 ## Project Structure
 
@@ -31,6 +40,10 @@ AmirTools/
 ├── main.py
 ├── pdf.py
 ├── image.py
+├── ml.py
+├── gerenate_dataset.py
+├── dataset.csv
+├── compressoin_model.pkl
 └── README.md
 ```
 ## How to use?
