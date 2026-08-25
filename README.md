@@ -31,7 +31,7 @@ AmirTools/
 ├── main.py
 ├── pdf.py
 ├── image.py
-└── requirements.txt
+└── README.md
 ```
 ## How to use?
 In your folder :
@@ -41,4 +41,4 @@ git clone "https://github.com/amirmahdialmasi/amirrx-tools"
 git pull
 ```
 
-### I hope enjoyable from app
+### I hope enjoyable from ap
