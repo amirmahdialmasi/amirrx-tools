@@ -1,6 +1,10 @@
 import sys
+import os
+import math
+import joblib
+import numpy as np
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from PyQt6.QtWidgets import (
     QApplication,
@@ -17,16 +21,50 @@ from PyQt6.QtWidgets import (
 )
 
 
+# =========================
+# Model
+# =========================
+
+MODEL_FILE = "compression_model.pkl"
+
+try:
+
+    model = joblib.load(
+        MODEL_FILE
+    )
+
+except Exception:
+
+    model = None
+
+
+# =========================
+# Image Window
+# =========================
+
 class ImageWindow(QWidget):
 
     def __init__(self):
+
         super().__init__()
 
-        self.setWindowTitle("Image Tools")
-        self.resize(600, 550)
+        self.setWindowTitle(
+            "Image Tools"
+        )
+
+        self.resize(
+            600,
+            600
+        )
 
         self.create_ui()
+
         self.connect_signals()
+
+
+    # =========================
+    # UI
+    # =========================
 
     def create_ui(self):
 
@@ -35,6 +73,7 @@ class ImageWindow(QWidget):
         # -------------------------
 
         self.image_path = QLineEdit()
+
         self.image_path.setPlaceholderText(
             "Select image"
         )
@@ -53,6 +92,7 @@ class ImageWindow(QWidget):
             self.browse_button
         )
 
+
         # -------------------------
         # Convert
         # -------------------------
@@ -69,6 +109,7 @@ class ImageWindow(QWidget):
         self.convert_button = QPushButton(
             "Convert"
         )
+
 
         # -------------------------
         # Compress
@@ -89,6 +130,21 @@ class ImageWindow(QWidget):
             "Compress"
         )
 
+
+        # -------------------------
+        # Smart Compression
+        # -------------------------
+
+        self.smart_button = QPushButton(
+            "🤖 Smart Quality"
+        )
+
+        self.smart_button.setToolTip(
+            "Use Machine Learning to recommend "
+            "the best compression quality."
+        )
+
+
         # -------------------------
         # Resize
         # -------------------------
@@ -104,6 +160,7 @@ class ImageWindow(QWidget):
             1920
         )
 
+
         self.height_box = QSpinBox()
 
         self.height_box.setRange(
@@ -115,6 +172,7 @@ class ImageWindow(QWidget):
             1080
         )
 
+
         self.aspect_ratio_checkbox = QCheckBox(
             "Keep Aspect Ratio"
         )
@@ -123,9 +181,11 @@ class ImageWindow(QWidget):
             True
         )
 
+
         self.resize_button = QPushButton(
             "Resize Image"
         )
+
 
         # -------------------------
         # Status
@@ -134,6 +194,7 @@ class ImageWindow(QWidget):
         self.status_label = QLabel(
             "Ready"
         )
+
 
         # -------------------------
         # Layout
@@ -144,6 +205,7 @@ class ImageWindow(QWidget):
         layout.addLayout(
             path_layout
         )
+
 
         # Convert
 
@@ -159,6 +221,7 @@ class ImageWindow(QWidget):
             self.convert_button
         )
 
+
         # Compress
 
         layout.addWidget(
@@ -170,8 +233,13 @@ class ImageWindow(QWidget):
         )
 
         layout.addWidget(
+            self.smart_button
+        )
+
+        layout.addWidget(
             self.compress_button
         )
+
 
         # Resize
 
@@ -199,6 +267,7 @@ class ImageWindow(QWidget):
             self.resize_button
         )
 
+
         # Status
 
         layout.addWidget(
@@ -208,6 +277,11 @@ class ImageWindow(QWidget):
         self.setLayout(
             layout
         )
+
+
+    # =========================
+    # Signals
+    # =========================
 
     def connect_signals(self):
 
@@ -223,13 +297,18 @@ class ImageWindow(QWidget):
             self.compress
         )
 
+        self.smart_button.clicked.connect(
+            self.smart_quality
+        )
+
         self.resize_button.clicked.connect(
             self.resize_image
         )
 
-    # -------------------------
+
+    # =========================
     # Browse
-    # -------------------------
+    # =========================
 
     def browse(self):
 
@@ -246,13 +325,147 @@ class ImageWindow(QWidget):
                 file_path
             )
 
-    # -------------------------
-    # Convert
-    # -------------------------
 
-    def convert(self):
+    # =========================
+    # Feature Extraction
+    # =========================
+
+    def extract_features(
+        self,
+        image_path
+    ):
+
+        image = Image.open(
+            image_path
+        ).convert(
+            "RGB"
+        )
+
+
+        # -------------------------
+        # Size
+        # -------------------------
+
+        width, height = image.size
+
+
+        # -------------------------
+        # Grayscale
+        # -------------------------
+
+        grayscale = image.convert(
+            "L"
+        )
+
+        pixels = np.array(
+            grayscale
+        )
+
+
+        # -------------------------
+        # Brightness
+        # -------------------------
+
+        brightness = pixels.mean()
+
+
+        # -------------------------
+        # Contrast
+        # -------------------------
+
+        contrast = pixels.std()
+
+
+        # -------------------------
+        # Color Variance
+        # -------------------------
+
+        rgb_pixels = np.array(
+            image
+        )
+
+        color_variance = (
+            rgb_pixels.var()
+        )
+
+
+        # -------------------------
+        # Edge Density
+        # -------------------------
+
+        edges = grayscale.filter(
+            ImageFilter.FIND_EDGES
+        )
+
+        edge_pixels = np.array(
+            edges
+        )
+
+        edge_density = (
+            (edge_pixels > 30).mean()
+        )
+
+
+        # -------------------------
+        # Entropy
+        # -------------------------
+
+        histogram = (
+            grayscale.histogram()
+        )
+
+        total = sum(
+            histogram
+        )
+
+        entropy = 0
+
+        for count in histogram:
+
+            if count == 0:
+                continue
+
+            probability = (
+                count / total
+            )
+
+            entropy -= (
+                probability *
+                math.log2(
+                    probability
+                )
+            )
+
+
+        # -------------------------
+        # Original Size
+        # -------------------------
+
+        original_size = os.path.getsize(
+            image_path
+        )
+
+
+        return {
+            "width": width,
+            "height": height,
+            "original_size": original_size,
+            "brightness": brightness,
+            "contrast": contrast,
+            "color_variance": color_variance,
+            "edge_density": edge_density,
+            "entropy": entropy
+        }
+
+
+    # =========================
+    # Smart Quality
+    # =========================
+
+    def smart_quality(self):
 
         image_path = self.image_path.text()
+
 
         if not image_path:
 
@@ -262,11 +475,110 @@ class ImageWindow(QWidget):
 
             return
 
+
+        if model is None:
+
+            self.status_label.setText(
+                "ML model not found. "
+                "Run ml.py first."
+            )
+
+            return
+
+
+        try:
+
+            features = (
+                self.extract_features(
+                    image_path
+                )
+            )
+
+
+            feature_order = [
+                "width",
+                "height",
+                "original_size",
+                "brightness",
+                "contrast",
+                "color_variance",
+                "edge_density",
+                "entropy"
+            ]
+
+
+            values = [
+                features[name]
+                for name in feature_order
+            ]
+
+
+            X = np.array(
+                [values]
+            )
+
+
+            prediction = model.predict(
+                X
+            )[0]
+
+
+            prediction = round(
+                prediction
+            )
+
+
+            prediction = max(
+                1,
+                min(
+                    100,
+                    prediction
+                )
+            )
+
+
+            self.quality_box.setValue(
+                prediction
+            )
+
+
+            self.status_label.setText(
+                f"AI recommended quality: "
+                f"{prediction}"
+            )
+
+
+        except Exception as error:
+
+            self.status_label.setText(
+                f"ML Error: {error}"
+            )
+
+
+    # =========================
+    # Convert
+    # =========================
+
+    def convert(self):
+
+        image_path = self.image_path.text()
+
+
+        if not image_path:
+
+            self.status_label.setText(
+                "Please select an image."
+            )
+
+            return
+
+
         output_format = (
             self.format_box
             .currentText()
             .lower()
         )
+
 
         output_path, _ = QFileDialog.getSaveFileName(
             self,
@@ -275,8 +587,11 @@ class ImageWindow(QWidget):
             f"{output_format.upper()} Files (*.{output_format})"
         )
 
+
         if not output_path:
+
             return
+
 
         try:
 
@@ -284,20 +599,24 @@ class ImageWindow(QWidget):
                 image_path
             )
 
+
             if output_format == "jpg":
 
                 image = image.convert(
                     "RGB"
                 )
 
+
             image.save(
                 output_path,
                 format=output_format.upper()
             )
 
+
             self.status_label.setText(
                 "Image converted successfully!"
             )
+
 
         except Exception as error:
 
@@ -305,13 +624,15 @@ class ImageWindow(QWidget):
                 f"Error: {error}"
             )
 
-    # -------------------------
+
+    # =========================
     # Compress
-    # -------------------------
+    # =========================
 
     def compress(self):
 
         image_path = self.image_path.text()
+
 
         if not image_path:
 
@@ -321,6 +642,7 @@ class ImageWindow(QWidget):
 
             return
 
+
         output_path, _ = QFileDialog.getSaveFileName(
             self,
             "Save Compressed Image",
@@ -328,8 +650,11 @@ class ImageWindow(QWidget):
             "JPG Files (*.jpg)"
         )
 
+
         if not output_path:
+
             return
+
 
         try:
 
@@ -341,7 +666,11 @@ class ImageWindow(QWidget):
                 "RGB"
             )
 
-            quality = self.quality_box.value()
+
+            quality = (
+                self.quality_box.value()
+            )
+
 
             image.save(
                 output_path,
@@ -350,9 +679,12 @@ class ImageWindow(QWidget):
                 optimize=True
             )
 
+
             self.status_label.setText(
-                "Image compressed successfully!"
+                f"Image compressed successfully! "
+                f"Quality: {quality}"
             )
+
 
         except Exception as error:
 
@@ -360,13 +692,15 @@ class ImageWindow(QWidget):
                 f"Error: {error}"
             )
 
-    # -------------------------
+
+    # =========================
     # Resize
-    # -------------------------
+    # =========================
 
     def resize_image(self):
 
         image_path = self.image_path.text()
+
 
         if not image_path:
 
@@ -376,8 +710,15 @@ class ImageWindow(QWidget):
 
             return
 
-        width = self.width_box.value()
-        height = self.height_box.value()
+
+        width = (
+            self.width_box.value()
+        )
+
+        height = (
+            self.height_box.value()
+        )
+
 
         output_path, _ = QFileDialog.getSaveFileName(
             self,
@@ -386,14 +727,18 @@ class ImageWindow(QWidget):
             "Images (*.png *.jpg *.jpeg *.webp *.bmp)"
         )
 
+
         if not output_path:
+
             return
+
 
         try:
 
             image = Image.open(
                 image_path
             )
+
 
             if self.aspect_ratio_checkbox.isChecked():
 
@@ -407,13 +752,16 @@ class ImageWindow(QWidget):
                     (width, height)
                 )
 
+
             image.save(
                 output_path
             )
 
+
             self.status_label.setText(
                 "Image resized successfully!"
             )
+
 
         except Exception as error:
 
@@ -422,11 +770,20 @@ class ImageWindow(QWidget):
             )
 
 
+# =========================
+# Run
+# =========================
+
 if __name__ == "__main__":
 
-    app = QApplication(sys.argv)
+    app = QApplication(
+        sys.argv
+    )
 
     window = ImageWindow()
+
     window.show()
 
-    sys.exit(app.exec())
+    sys.exit(
+        app.exec()
+    )
