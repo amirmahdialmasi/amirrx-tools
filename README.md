@@ -47,11 +47,14 @@ AmirTools/
 └── README.md
 ```
 ## How to use?
-In your folder :
+### 1. In your folder:
 
 ```bash
 git clone "https://github.com/amirmahdialmasi/amirrx-tools"
-git pull
 ```
 
-### I hope enjoyable from app
+### 2. Run:
+
+```bash
+pip install -r requirements.txt
+```

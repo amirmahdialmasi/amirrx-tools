@@ -1,0 +1,8 @@
+PyQt6
+Pillow
+numpy
+scikit-learn
+joblib
+pandas
+pymupdf
+zipfile
